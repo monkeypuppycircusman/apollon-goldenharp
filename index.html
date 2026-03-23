@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APOLLON — The Golden Harp</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cinzel+Decorative:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap');
+
+:root {
+  --midnight: #06050e;
+  --deep:     #0a0818;
+  --abyss:    #0f0c20;
+  --veil:     #16122c;
+  --dusk:     #1e1838;
+  --gold:     #f0c040;
+  --gold2:    #ffd96a;
+  --gold3:    #ffe89a;
+  --gold4:    #fff3c8;
+  --gold-dim: #3a2c08;
+  --gilt:     #c89820;
+  --tarnish:  #7a5c10;
+  --ivory:    #f5f0e0;
+  --ivory2:   #e8e0c8;
+  --lapis:    #1a2860;
+  --lapis2:   #263888;
+  --muse:     #c8a0ff;
+  --muse2:    #e0c8ff;
+  --laurel:   #4a8040;
+  --laurel2:  #6aaa58;
+  --text-dim: rgba(240,192,64,.35);
+  --text-mid: rgba(240,192,64,.6);
+  --sans: 'EB Garamond', serif;
+  --title: 'Cinzel Decorative', serif;
+  --cap: 'Cinzel', serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%;
+  background: var(--midnight);
+  overflow: hidden;
+  font-family: var(--sans);
+  cursor: none;
+}
+
+/* ── CUSTOM CURSOR: laurel sprig ── */
+#cursor {
+  position: fixed; width: 28px; height: 28px;
+  pointer-events: none; z-index: 9999;
+  transform: translate(-50%, -50%);
+}
+#cursor svg { width: 100%; height: 100%; }
+
+/* ── STARFIELD ── */
+#stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+
+/* ── RADIANCE: soft golden glow behind harp ── */
+#radiance {
+  position: fixed; inset: 0; pointer-events: none; z-index: 1;
+  background: radial-gradient(ellipse 60% 70% at 50% 55%, rgba(240,192,64,.06) 0%, transparent 70%);
+}
+
+/* ── APP ── */
+#app {
+  position: relative; width: 100vw; height: 100vh;
+  display: flex; flex-direction: column; z-index: 2;
+}
+
+/* ── HEADER ── */
+#hdr {
+  flex-shrink: 0;
+  padding: 20px 32px 16px;
+  display: flex; align-items: center; gap: 20px;
+  border-bottom: 1px solid rgba(240,192,64,.15);
+  background: linear-gradient(180deg, rgba(10,8,24,.96) 0%, transparent 100%);
+  position: relative; z-index: 10;
+}
+
+.hdr-ornament {
+  color: var(--text-mid);
+  font-size: 18px; letter-spacing: 2px;
+  font-family: var(--cap);
+}
+
+#logo {
+  font-family: var(--title);
+  font-size: 28px;
+  color: var(--gold2);
+  letter-spacing: 6px;
+  line-height: 1;
+  text-shadow: 0 0 30px rgba(240,192,64,.5), 0 0 80px rgba(240,192,64,.2);
+}
+
+#logo-sub {
+  font-family: var(--cap);
+  font-size: 8px;
+  letter-spacing: 4px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+
+#hdr-stats {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 18px;
+}
+
+.hstat {
+  font-family: var(--cap);
+  font-size: 8px; letter-spacing: 2px;
+  color: rgba(240,192,64,.3);
+  text-transform: uppercase;
+}
+.hstat span { color: rgba(240,192,64,.6); transition: color .1s; }
+.hstat span.lit {
+  color: var(--gold3);
+  text-shadow: 0 0 10px var(--gold);
+}
+
+#power-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--tarnish); transition: all .4s;
+}
+#power-dot.on {
+  background: var(--gold2);
+  box-shadow: 0 0 8px var(--gold), 0 0 24px rgba(240,192,64,.6);
+}
+
+/* ── MAIN ── */
+#main {
+  flex: 1; display: flex; align-items: stretch;
+  overflow: hidden; position: relative;
+}
+
+/* ── LEFT: HARP STAGE ── */
+#harp-stage {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  position: relative; padding: 10px;
+}
+
+/* glow that pulses on pluck */
+#harp-glow {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 50% 60% at 50% 55%, rgba(240,192,64,.0) 0%, transparent 70%);
+  pointer-events: none; transition: background .3s;
+}
+
+/* ── HARP SVG ── */
+#harp-svg {
+  height: 100%;
+  max-height: 520px;
+  width: auto;
+  filter: drop-shadow(0 0 40px rgba(240,192,64,.18));
+  position: relative; z-index: 3;
+}
+
+/* String hit areas */
+.string-hit {
+  cursor: pointer;
+  opacity: 0;
+  fill: transparent;
+}
+.string-hit:hover + .string-line { stroke: rgba(255,237,150,.7); }
+
+.string-line {
+  transition: stroke .08s, stroke-width .08s;
+  pointer-events: none;
+}
+.string-line.plucked {
+  stroke: var(--gold3) !important;
+  stroke-width: 2.5 !important;
+  filter: url(#string-glow);
+  animation: stringvib 0.5s ease-out forwards;
+}
+@keyframes stringvib {
+  0%   { stroke-width: 3;   opacity: 1; }
+  15%  { stroke-width: 2;   opacity: .95; }
+  35%  { stroke-width: 1.8; opacity: .85; }
+  100% { stroke-width: 1.2; opacity: .6; }
+}
+
+/* Ripple on pluck */
+.pluck-ripple {
+  pointer-events: none;
+  animation: ripplefade .7s ease-out forwards;
+}
+@keyframes ripplefade {
+  0%   { r: 4;  opacity: .8; }
+  100% { r: 22; opacity: 0;  }
+}
+
+/* ── RIGHT: CONTROLS PANEL ── */
+#panel {
+  width: 220px;
+  flex-shrink: 0;
+  border-left: 1px solid rgba(240,192,64,.12);
+  background: linear-gradient(180deg, rgba(10,8,24,.9) 0%, rgba(6,5,14,.95) 100%);
+  display: flex; flex-direction: column;
+  padding: 20px 16px;
+  gap: 20px;
+  overflow-y: auto;
+  position: relative; z-index: 5;
+}
+
+.panel-section { display: flex; flex-direction: column; gap: 8px; }
+
+.panel-title {
+  font-family: var(--cap);
+  font-size: 7px; letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(240,192,64,.1);
+}
+
+/* Mode buttons */
+.mode-btn {
+  font-family: var(--cap);
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  padding: 6px 10px;
+  border: 1px solid rgba(240,192,64,.2);
+  border-radius: 2px;
+  color: rgba(240,192,64,.45);
+  background: transparent;
+  cursor: pointer; transition: all .18s;
+  text-align: left;
+}
+.mode-btn:hover { color: var(--gold2); border-color: rgba(240,192,64,.45); background: rgba(240,192,64,.04); }
+.mode-btn.active {
+  color: var(--gold3);
+  border-color: var(--gold);
+  background: rgba(240,192,64,.08);
+  text-shadow: 0 0 10px rgba(240,192,64,.5);
+}
+
+/* Scale buttons */
+.scale-btn {
+  font-family: var(--sans);
+  font-style: italic;
+  font-size: 13px;
+  color: rgba(240,192,64,.4);
+  background: transparent;
+  border: 1px solid rgba(240,192,64,.15);
+  border-radius: 2px;
+  padding: 4px 10px;
+  cursor: pointer; transition: all .15s;
+}
+.scale-btn:hover { color: var(--muse2); border-color: var(--muse); }
+.scale-btn.active { color: var(--muse2); border-color: var(--muse); background: rgba(200,160,255,.06); }
+
+/* Knob groups */
+.kg { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+canvas.knob { cursor: ns-resize; display: block; }
+.kl {
+  font-family: var(--cap); font-size: 7px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--text-dim);
+}
+.kv { font-family: var(--cap); font-size: 9px; color: rgba(240,192,64,.55); min-width: 36px; text-align: center; }
+
+.knob-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+/* Note display */
+#note-display {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid rgba(240,192,64,.1);
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+#note-name {
+  font-family: var(--title);
+  font-size: 32px;
+  color: var(--gold2);
+  text-shadow: 0 0 20px var(--gold), 0 0 50px rgba(240,192,64,.3);
+  line-height: 1; letter-spacing: 2px;
+}
+#note-freq {
+  font-family: var(--cap); font-size: 9px;
+  color: var(--text-dim); letter-spacing: 1px;
+}
+#muse-name {
+  font-family: var(--sans); font-style: italic; font-size: 12px;
+  color: rgba(200,160,255,.5); letter-spacing: 1px; margin-top: 2px;
+}
+
+/* ── WAVEFORM ── */
+#wave-bar {
+  flex-shrink: 0; height: 48px;
+  border-top: 1px solid rgba(240,192,64,.12);
+  background: rgba(6,5,14,.95);
+  position: relative; z-index: 10; overflow: hidden;
+}
+#wave-canvas { width: 100%; height: 100%; display: block; }
+
+/* ── CHORD STRIP ── */
+#chord-strip {
+  flex-shrink: 0;
+  border-top: 1px solid rgba(240,192,64,.1);
+  background: linear-gradient(0deg, rgba(6,5,14,.98) 0%, transparent 100%);
+  padding: 8px 20px 10px;
+  display: flex; align-items: center; gap: 10px;
+  position: relative; z-index: 10; flex-wrap: wrap;
+}
+
+.chord-title {
+  font-family: var(--cap); font-size: 7px; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--text-dim); flex-shrink: 0;
+}
+
+.chord-btn {
+  font-family: var(--sans); font-style: italic; font-size: 14px;
+  color: rgba(240,192,64,.4); background: transparent;
+  border: 1px solid rgba(240,192,64,.15); border-radius: 2px;
+  padding: 4px 12px; cursor: pointer; transition: all .15s;
+}
+.chord-btn:hover { color: var(--gold2); border-color: rgba(240,192,64,.5); background: rgba(240,192,64,.05); }
+.chord-btn.flash { color: var(--gold3); border-color: var(--gold); background: rgba(240,192,64,.1); }
+
+.chord-key-hint {
+  font-family: var(--cap); font-size: 7px; letter-spacing: 1px;
+  color: rgba(240,192,64,.2); margin-left: 2px;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(240,192,64,.15); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- Cursor: lyre/plectrum -->
+<div id="cursor">
+  <svg viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
+    <path d="M14 3 C10 3 7 6 7 10 C7 15 10 18 14 20 C18 18 21 15 21 10 C21 6 18 3 14 3 Z"
+      fill="none" stroke="rgba(240,192,64,.75)" stroke-width="1"/>
+    <line x1="14" y1="20" x2="14" y2="26" stroke="rgba(240,192,64,.5)" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="10" y1="10" x2="10" y2="18" stroke="rgba(240,192,64,.4)" stroke-width=".7" stroke-linecap="round"/>
+    <line x1="14" y1="8"  x2="14" y2="18" stroke="rgba(240,192,64,.5)" stroke-width=".7" stroke-linecap="round"/>
+    <line x1="18" y1="10" x2="18" y2="18" stroke="rgba(240,192,64,.4)" stroke-width=".7" stroke-linecap="round"/>
+    <circle cx="14" cy="3" r="1.2" fill="rgba(240,192,64,.7)"/>
+  </svg>
+</div>
+
+<canvas id="stars"></canvas>
+<div id="radiance"></div>
+
+<div id="app">
+  <!-- HEADER -->
+  <div id="hdr">
+    <span class="hdr-ornament">✦</span>
+    <div>
+      <div id="logo">Apollon</div>
+      <div id="logo-sub">The Golden Harp · Sacred Strings</div>
+    </div>
+    <span class="hdr-ornament">✦</span>
+    <div id="hdr-stats">
+      <div class="hstat">String <span id="hs-string">—</span></div>
+      <div class="hstat">Note <span id="hs-note">—</span></div>
+      <div class="hstat">Octave <span id="hs-oct">4</span></div>
+      <div id="power-dot"></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+
+    <!-- HARP STAGE -->
+    <div id="harp-stage">
+      <div id="harp-glow"></div>
+
+      <svg id="harp-svg" viewBox="0 0 380 560" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="string-glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="gold-glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <linearGradient id="column-grad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%"   stop-color="#c89820"/>
+            <stop offset="30%"  stop-color="#f0c040"/>
+            <stop offset="60%"  stop-color="#ffd96a"/>
+            <stop offset="100%" stop-color="#b88018"/>
+          </linearGradient>
+          <linearGradient id="neck-grad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%"   stop-color="#a07810"/>
+            <stop offset="40%"  stop-color="#e0b030"/>
+            <stop offset="100%" stop-color="#c89820"/>
+          </linearGradient>
+          <linearGradient id="body-grad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%"   stop-color="#7a5c10"/>
+            <stop offset="30%"  stop-color="#c89820"/>
+            <stop offset="70%"  stop-color="#f0c040"/>
+            <stop offset="100%" stop-color="#b88018"/>
+          </linearGradient>
+          <linearGradient id="soundboard-grad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%"   stop-color="#3a2c08"/>
+            <stop offset="40%"  stop-color="#6a4e14"/>
+            <stop offset="100%" stop-color="#4a3a0c"/>
+          </linearGradient>
+        </defs>
+
+        <!-- ═══ HARP BODY STRUCTURE ═══ -->
+
+        <!-- Soundboard (front face, slightly recessed) -->
+        <path d="M 158 80 C 162 60 170 45 182 35
+                    C 158 120 148 200 148 300
+                    C 148 380 155 440 165 490
+                    L 240 510 L 248 492
+                    C 238 445 230 385 230 305
+                    C 230 210 238 135 258 65
+                    C 246 52 228 42 210 38
+                    C 196 35 180 36 168 42 Z"
+          fill="url(#soundboard-grad)" stroke="rgba(240,192,64,.3)" stroke-width="1"/>
+
+        <!-- Decorative rosette on soundboard -->
+        <circle cx="195" cy="290" r="22" fill="none" stroke="rgba(240,192,64,.2)" stroke-width=".8"/>
+        <circle cx="195" cy="290" r="16" fill="none" stroke="rgba(240,192,64,.15)" stroke-width=".6"/>
+        <circle cx="195" cy="290" r="8"  fill="none" stroke="rgba(240,192,64,.25)" stroke-width=".8"/>
+        <circle cx="195" cy="290" r="3"  fill="rgba(240,192,64,.15)"/>
+        <!-- rosette petals -->
+        <g stroke="rgba(240,192,64,.18)" stroke-width=".6" fill="none">
+          <path d="M195 274 C198 278 198 282 195 286 C192 282 192 278 195 274"/>
+          <path d="M195 294 C198 298 198 302 195 306 C192 302 192 298 195 294"/>
+          <path d="M179 290 C183 287 187 287 191 290 C187 293 183 293 179 290"/>
+          <path d="M199 290 C203 287 207 287 211 290 C207 293 203 293 199 290"/>
+        </g>
+
+        <!-- Column (left pillar) -->
+        <path d="M 90 490 C 86 460 84 400 84 320 C 84 220 88 140 100 75 C 106 48 114 32 124 22 C 130 16 138 13 146 14 C 152 15 158 18 162 24 C 150 30 142 42 136 58 C 122 92 112 170 108 270 C 106 340 108 410 114 480 Z"
+          fill="url(#column-grad)" stroke="rgba(200,152,32,.5)" stroke-width="1"/>
+
+        <!-- Column decorative fluting lines -->
+        <path d="M98 80  C98 200 96 350 100 480" fill="none" stroke="rgba(255,255,200,.08)" stroke-width=".5"/>
+        <path d="M108 55 C106 180 104 340 110 480" fill="none" stroke="rgba(0,0,0,.15)" stroke-width=".5"/>
+
+        <!-- Neck (curved top bar) -->
+        <path d="M 124 22 C 136 12 154 6  174 4
+                   C 196 2  220 6  240 14
+                   C 256 22 266 36 268 52
+                   C 270 66 264 80 254 88
+                   C 244 60 230 44 210 38
+                   C 196 34 180 36 168 42
+                   C 156 34 142 26 124 22 Z"
+          fill="url(#neck-grad)" stroke="rgba(200,152,32,.5)" stroke-width="1"/>
+
+        <!-- Neck top edge highlight -->
+        <path d="M 124 22 C 150 10 200 4 240 14 C 256 22 266 36 268 52"
+          fill="none" stroke="rgba(255,240,160,.25)" stroke-width=".8"/>
+
+        <!-- Base / foot -->
+        <path d="M 90 490 L 114 480 L 165 490 L 240 510 L 248 492 L 260 498 L 250 516 L 220 524 L 165 510 L 114 500 Z"
+          fill="url(#body-grad)" stroke="rgba(200,152,32,.4)" stroke-width="1"/>
+
+        <!-- Base decorative band -->
+        <path d="M 90 490 L 260 498" fill="none" stroke="rgba(255,220,80,.2)" stroke-width=".6"/>
+
+        <!-- Crown ornament atop column -->
+        <circle cx="146" cy="14" r="5" fill="none" stroke="rgba(240,192,64,.7)" stroke-width="1"/>
+        <circle cx="146" cy="14" r="2.5" fill="rgba(240,192,64,.5)"/>
+        <path d="M142 10 L140 5 L146 8 L152 5 L150 10" fill="none" stroke="rgba(240,192,64,.6)" stroke-width=".8"/>
+
+        <!-- Tuning pins row (along neck) -->
+        <g fill="rgba(240,192,64,.55)" stroke="rgba(240,192,64,.3)" stroke-width=".5">
+          <!-- pins generated per string below in JS -->
+        </g>
+
+        <!-- ═══ STRINGS (drawn by JS) ═══ -->
+        <g id="strings-group"></g>
+
+        <!-- ═══ DECORATIVE ENGRAVINGS ═══ -->
+        <!-- Sun motif on column -->
+        <g transform="translate(100, 260)">
+          <circle r="12" fill="none" stroke="rgba(240,192,64,.2)" stroke-width=".7"/>
+          <circle r="5" fill="rgba(240,192,64,.12)"/>
+          <g stroke="rgba(240,192,64,.18)" stroke-width=".6">
+            <line x1="0" y1="-14" x2="0" y2="-18"/>
+            <line x1="0" y1="14"  x2="0" y2="18"/>
+            <line x1="-14" y1="0" x2="-18" y2="0"/>
+            <line x1="14"  y1="0" x2="18"  y2="0"/>
+            <line x1="-10" y1="-10" x2="-13" y2="-13"/>
+            <line x1="10"  y1="-10" x2="13"  y2="-13"/>
+            <line x1="-10" y1="10"  x2="-13" y2="13"/>
+            <line x1="10"  y1="10"  x2="13"  y2="13"/>
+          </g>
+        </g>
+
+        <!-- Laurel border at neck joint -->
+        <path d="M 124 22 C 128 30 132 36 136 40" fill="none" stroke="rgba(106,170,88,.35)" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M 130 20 C 133 28 136 34 138 38" fill="none" stroke="rgba(106,170,88,.25)" stroke-width="1" stroke-linecap="round"/>
+
+        <!-- Ripple overlay (populated by JS) -->
+        <g id="ripple-group"></g>
+
+      </svg>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div id="panel">
+
+      <div class="panel-section">
+        <div class="panel-title">✦ Voice</div>
+        <button class="mode-btn active" data-voice="celestial">Celestial</button>
+        <button class="mode-btn" data-voice="lyric">Lyric</button>
+        <button class="mode-btn" data-voice="ancient">Ancient</button>
+        <button class="mode-btn" data-voice="ethereal">Ethereal</button>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-title">✦ Tuning</div>
+        <button class="scale-btn active" data-tuning="diatonic">Diatonic</button>
+        <button class="scale-btn" data-tuning="pentatonic">Pentatonic</button>
+        <button class="scale-btn" data-tuning="phrygian">Phrygian</button>
+        <button class="scale-btn" data-tuning="lydian">Lydian</button>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-title">✦ Parameters</div>
+        <div class="knob-row">
+          <div class="kg">
+            <canvas class="knob" id="k-reverb"  width="44" height="44" data-min="0" data-max="1"   data-val="0.65" data-color="#f0c040"></canvas>
+            <div class="kl">Reverb</div><div class="kv" id="v-reverb">0.65</div>
+          </div>
+          <div class="kg">
+            <canvas class="knob" id="k-sustain" width="44" height="44" data-min="0.5" data-max="6" data-val="3.5"  data-color="#ffd96a"></canvas>
+            <div class="kl">Sustain</div><div class="kv" id="v-sustain">3.50</div>
+          </div>
+        </div>
+        <div class="knob-row">
+          <div class="kg">
+            <canvas class="knob" id="k-tone"    width="44" height="44" data-min="0" data-max="1"   data-val="0.6"  data-color="#c8a0ff"></canvas>
+            <div class="kl">Tone</div><div class="kv" id="v-tone">0.60</div>
+          </div>
+          <div class="kg">
+            <canvas class="knob" id="k-shimmer" width="44" height="44" data-min="0" data-max="1"   data-val="0.35" data-color="#ffe89a"></canvas>
+            <div class="kl">Shimmer</div><div class="kv" id="v-shimmer">0.35</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="note-display">
+        <div id="note-name">—</div>
+        <div id="note-freq">— Hz</div>
+        <div id="muse-name">—</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- WAVEFORM -->
+  <div id="wave-bar"><canvas id="wave-canvas"></canvas></div>
+
+  <!-- CHORD STRIP -->
+  <div id="chord-strip">
+    <span class="chord-title">✦ Glissando</span>
+    <button class="chord-btn" data-chord="ascend">Ascend <span class="chord-key-hint">[1]</span></button>
+    <button class="chord-btn" data-chord="descend">Descend <span class="chord-key-hint">[2]</span></button>
+    <button class="chord-btn" data-chord="arpeggio">Arpeggio <span class="chord-key-hint">[3]</span></button>
+    <button class="chord-btn" data-chord="cascade">Cascade <span class="chord-key-hint">[4]</span></button>
+    <button class="chord-btn" data-chord="olympus">Olympus <span class="chord-key-hint">[5]</span></button>
+    <div style="margin-left:auto;font-family:var(--cap);font-size:7px;letter-spacing:2px;color:rgba(240,192,64,.2);">KEYBOARD: A–K pluck strings · Z/X octave</div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// APOLLON — The Golden Harp
+// ══════════════════════════════════════════════════════
+
+// ── Audio ──
+let actx = null, convolver = null, analyser = null;
+
+function getCtx() {
+  if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+  if (actx.state === 'suspended') actx.resume();
+  if (!convolver) buildReverb();
+  if (!analyser) {
+    analyser = actx.createAnalyser(); analyser.fftSize = 512;
+    analyser.connect(actx.destination);
+  }
+  return actx;
+}
+
+const P = {
+  reverb: 0.65, sustain: 3.5, tone: 0.6, shimmer: 0.35,
+  voice: 'celestial', tuning: 'diatonic', octave: 4,
+};
+
+// ── Reverb ──
+function buildReverb() {
+  const c = actx;
+  const dur = 4.5;
+  const len = c.sampleRate * dur;
+  const buf = c.createBuffer(2, len, c.sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const d = buf.getChannelData(ch);
+    for (let i = 0; i < len; i++) {
+      d[i] = (Math.random()*2-1) * Math.pow(1 - i/len, 1.6);
+    }
+  }
+  if (convolver) try { convolver.disconnect(); } catch(e) {}
+  convolver = c.createConvolver(); convolver.buffer = buf;
+  convolver.connect(c.destination);
+}
+
+// ── Tunings: semitone offsets from root C ──
+const TUNINGS = {
+  diatonic:   [0,2,4,5,7,9,11,12,14,16,17,19,21,23], // C major
+  pentatonic: [0,2,4,7,9, 12,14,16,19,21,24,26,28,31],
+  phrygian:   [0,1,3,5,7,8,10,12,13,15,17,19,20,22],
+  lydian:     [0,2,4,6,7,9,11,12,14,16,18,19,21,23],
+};
+
+const NOTE_NAMES = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+const NUM_STRINGS = 14;
+
+// Muse associations per string zone
+const MUSE_NAMES = [
+  'Calliope','Clio','Erato','Euterpe','Melpomene',
+  'Polyhymnia','Terpsichore','Thalia','Urania',
+  'Calliope','Erato','Euterpe','Terpsichore','Apollo',
+];
+
+function midiToFreq(n) { return 440 * Math.pow(2, (n - 69) / 12); }
+function midiToName(n) { return NOTE_NAMES[n % 12]; }
+
+function getStringMidi(stringIdx) {
+  const offsets = TUNINGS[P.tuning];
+  const baseOct = P.octave;
+  const rootMidi = (baseOct + 1) * 12; // C(octave)
+  return rootMidi + (offsets[stringIdx] || stringIdx * 2);
+}
+
+// ── HARP STRING GEOMETRY ──
+// Strings go from top-neck attachment → bottom-soundboard base
+// Each string: { x1,y1 (neck), x2,y2 (base) }
+// The harp neck curves from ~(268,52) down-left to about (162,88)
+// The base runs from ~(165,490) to ~(245,505)
+
+const STRING_DATA = [];
+
+function computeStrings() {
+  STRING_DATA.length = 0;
+  const n = NUM_STRINGS;
+  for (let i = 0; i < n; i++) {
+    const t = i / (n - 1); // 0 = leftmost (bass), 1 = rightmost (treble)
+    // Neck attachment: left end near column, right near neck tip
+    const nx = 162 + t * (262 - 162);
+    const ny = 90  - t * (90 - 55);  // neck curves up toward tip
+    // Base attachment: along the soundboard base line
+    const bx = 167 + t * (242 - 167);
+    const by = 490 + t * (506 - 490);
+    // String length factor (bass strings longer/fatter)
+    const len = Math.sqrt((bx-nx)**2 + (by-ny)**2);
+    const thick = 1.8 - t * 1.1; // bass=thick, treble=thin
+    STRING_DATA.push({ nx, ny, bx, by, len, thick, idx: i });
+  }
+}
+
+function buildStringsSVG() {
+  computeStrings();
+  const g = document.getElementById('strings-group');
+  g.innerHTML = '';
+
+  STRING_DATA.forEach((s, i) => {
+    const t = i / (NUM_STRINGS - 1);
+    // Color: bass strings more amber-gold, treble more bright gold
+    const alpha = 0.35 + t * 0.25;
+    const r = Math.round(200 + t * 55);
+    const grn = Math.round(140 + t * 55);
+    const strokeColor = `rgba(${r},${grn},40,${alpha})`;
+
+    // Hit zone (wider invisible rect along string)
+    const hit = document.createElementNS('http://www.w3.org/2000/svg','line');
+    hit.setAttribute('x1', s.nx); hit.setAttribute('y1', s.ny);
+    hit.setAttribute('x2', s.bx); hit.setAttribute('y2', s.by);
+    hit.setAttribute('stroke', 'transparent');
+    hit.setAttribute('stroke-width', '18');
+    hit.setAttribute('class', 'string-hit');
+    hit.dataset.string = i;
+    g.appendChild(hit);
+
+    // Visible string line
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', s.nx); line.setAttribute('y1', s.ny);
+    line.setAttribute('x2', s.bx); line.setAttribute('y2', s.by);
+    line.setAttribute('stroke', strokeColor);
+    line.setAttribute('stroke-width', s.thick.toFixed(2));
+    line.setAttribute('class', 'string-line');
+    line.setAttribute('id', `string-${i}`);
+    g.appendChild(line);
+
+    // Tuning pin dot at neck
+    const pin = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    pin.setAttribute('cx', s.nx); pin.setAttribute('cy', s.ny);
+    pin.setAttribute('r', 2.2);
+    pin.setAttribute('fill', 'rgba(240,192,64,.6)');
+    pin.setAttribute('stroke', 'rgba(255,240,160,.3)');
+    pin.setAttribute('stroke-width', '.5');
+    pin.setAttribute('pointer-events', 'none');
+    g.appendChild(pin);
+
+    // Base anchor dot
+    const anc = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    anc.setAttribute('cx', s.bx); anc.setAttribute('cy', s.by);
+    anc.setAttribute('r', 1.8);
+    anc.setAttribute('fill', 'rgba(240,192,64,.4)');
+    anc.setAttribute('pointer-events', 'none');
+    g.appendChild(anc);
+
+    // Event
+    hit.addEventListener('click', () => pluckString(i, 0.7 + Math.random()*0.3));
+    hit.addEventListener('touchstart', e => { e.preventDefault(); pluckString(i, 0.7+Math.random()*0.3); }, {passive:false});
+  });
+}
+
+// ── PLUCK ANIMATION ──
+function animatePluck(stringIdx) {
+  const line = document.getElementById(`string-${stringIdx}`);
+  if (!line) return;
+  line.classList.remove('plucked');
+  void line.offsetWidth; // reflow
+  line.classList.add('plucked');
+  setTimeout(() => line.classList.remove('plucked'), 600);
+
+  // Ripple at midpoint
+  const s = STRING_DATA[stringIdx];
+  const mx = (s.nx + s.bx) / 2;
+  const my = (s.ny + s.by) / 2;
+  const rg = document.getElementById('ripple-group');
+  const rip = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  rip.setAttribute('cx', mx); rip.setAttribute('cy', my);
+  rip.setAttribute('r', 4);
+  rip.setAttribute('fill', 'none');
+  rip.setAttribute('stroke', 'rgba(255,240,160,.6)');
+  rip.setAttribute('stroke-width', '1');
+  rip.setAttribute('class', 'pluck-ripple');
+  rg.appendChild(rip);
+  setTimeout(() => rip.remove(), 750);
+
+  // Harp glow pulse
+  const glow = document.getElementById('harp-glow');
+  glow.style.background = `radial-gradient(ellipse 50% 60% at 50% 55%, rgba(240,192,64,.09) 0%, transparent 70%)`;
+  setTimeout(() => glow.style.background = `radial-gradient(ellipse 50% 60% at 50% 55%, rgba(240,192,64,.0) 0%, transparent 70%)`, 500);
+}
+
+// ── SOUND SYNTHESIS ──
+function pluckString(stringIdx, vel) {
+  const c = getCtx();
+  const midi = getStringMidi(stringIdx);
+  const freq = midiToFreq(midi);
+  const now = c.currentTime;
+  const sustain = P.sustain;
+
+  animatePluck(stringIdx);
+  updateDisplay(stringIdx, midi, freq);
+
+  const t = stringIdx / (NUM_STRINGS - 1); // 0=bass, 1=treble
+
+  // ── Voice-specific synthesis ──
+  let masterOut;
+
+  switch (P.voice) {
+    case 'celestial': masterOut = voiceCelestial(c, now, freq, vel, sustain, t); break;
+    case 'lyric':     masterOut = voiceLyric(c, now, freq, vel, sustain, t);     break;
+    case 'ancient':   masterOut = voiceAncient(c, now, freq, vel, sustain, t);   break;
+    case 'ethereal':  masterOut = voiceEthereal(c, now, freq, vel, sustain, t);  break;
+    default:          masterOut = voiceCelestial(c, now, freq, vel, sustain, t);
+  }
+
+  // Shimmer layer — octave above, very soft
+  if (P.shimmer > 0.05) {
+    const shimOsc = c.createOscillator(); shimOsc.type = 'sine';
+    shimOsc.frequency.value = freq * 2;
+    const shimG = c.createGain();
+    shimG.gain.setValueAtTime(0, now);
+    shimG.gain.linearRampToValueAtTime(vel * P.shimmer * 0.12, now + 0.04);
+    shimG.gain.exponentialRampToValueAtTime(0.001, now + sustain * 0.7);
+    shimOsc.connect(shimG); shimG.connect(masterOut);
+    shimOsc.start(now); shimOsc.stop(now + sustain * 0.75);
+  }
+
+  // Route to dry + reverb
+  const dry = c.createGain(); dry.gain.value = 1 - P.reverb * 0.85;
+  const wet = c.createGain(); wet.gain.value = P.reverb * 0.85;
+  masterOut.connect(dry); dry.connect(analyser);
+  masterOut.connect(wet); wet.connect(convolver);
+}
+
+// ── CELESTIAL: bright, shimmering, heavenly ──
+function voiceCelestial(c, now, freq, vel, sustain, t) {
+  const master = c.createGain(); master.gain.value = 1;
+
+  // Fundamental
+  const osc = c.createOscillator(); osc.type = 'triangle';
+  osc.frequency.value = freq;
+  const eg = c.createGain();
+  eg.gain.setValueAtTime(0, now);
+  eg.gain.linearRampToValueAtTime(vel * 0.7, now + 0.008);
+  eg.gain.exponentialRampToValueAtTime(vel * 0.35, now + 0.12);
+  eg.gain.exponentialRampToValueAtTime(0.001, now + sustain);
+
+  // 2nd harmonic
+  const h2 = c.createOscillator(); h2.type = 'sine';
+  h2.frequency.value = freq * 2;
+  const h2g = c.createGain();
+  h2g.gain.setValueAtTime(vel * 0.22, now + 0.005);
+  h2g.gain.exponentialRampToValueAtTime(0.001, now + sustain * 0.7);
+
+  // Tone filter
+  const lpf = c.createBiquadFilter(); lpf.type = 'lowpass';
+  lpf.frequency.value = 800 + P.tone * 6000;
+
+  osc.connect(eg); eg.connect(lpf);
+  h2.connect(h2g); h2g.connect(lpf);
+  lpf.connect(master);
+
+  osc.start(now); osc.stop(now + sustain + 0.1);
+  h2.start(now); h2.stop(now + sustain * 0.75);
+  return master;
+}
+
+// ── LYRIC: warm, singing, emotional ──
+function voiceLyric(c, now, freq, vel, sustain, t) {
+  const master = c.createGain(); master.gain.value = 1;
+  const harmonics = [1, 2, 3, 4, 5];
+  const amps = [0.7, 0.28, 0.14, 0.07, 0.03];
+  harmonics.forEach((h, i) => {
+    const osc = c.createOscillator();
+    osc.type = h === 1 ? 'triangle' : 'sine';
+    osc.frequency.value = freq * h;
+    osc.detune.value = (Math.random() - 0.5) * 2;
+    const g = c.createGain();
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(vel * amps[i], now + 0.01 + i * 0.003);
+    g.gain.exponentialRampToValueAtTime(0.001, now + sustain * (1 - i * 0.12));
+    osc.connect(g); g.connect(master);
+    osc.start(now); osc.stop(now + sustain + 0.1);
+  });
+  const lpf = c.createBiquadFilter(); lpf.type = 'lowpass';
+  lpf.frequency.value = 600 + P.tone * 5000;
+  master.connect(lpf);
+  const out = c.createGain(); out.gain.value = 1;
+  lpf.connect(out);
+  return out;
+}
+
+// ── ANCIENT: more nasal, lyric-like with odd harmonics ──
+function voiceAncient(c, now, freq, vel, sustain, t) {
+  const master = c.createGain(); master.gain.value = 1;
+  // Sawtooth body with bandpass shaping
+  const osc = c.createOscillator(); osc.type = 'sawtooth';
+  osc.frequency.value = freq;
+  const bpf = c.createBiquadFilter(); bpf.type = 'bandpass';
+  bpf.frequency.value = freq * (1.5 + P.tone * 2);
+  bpf.Q.value = 1.8;
+  const g = c.createGain();
+  g.gain.setValueAtTime(0, now);
+  g.gain.linearRampToValueAtTime(vel * 0.5, now + 0.006);
+  g.gain.exponentialRampToValueAtTime(vel * 0.2, now + 0.15);
+  g.gain.exponentialRampToValueAtTime(0.001, now + sustain * 0.85);
+  // Sub-tone for body
+  const sub = c.createOscillator(); sub.type = 'sine';
+  sub.frequency.value = freq * 0.5;
+  const sg = c.createGain();
+  sg.gain.setValueAtTime(vel * 0.25, now + 0.002);
+  sg.gain.exponentialRampToValueAtTime(0.001, now + sustain * 0.6);
+  osc.connect(bpf); bpf.connect(g); g.connect(master);
+  sub.connect(sg); sg.connect(master);
+  osc.start(now); osc.stop(now + sustain + 0.1);
+  sub.start(now); sub.stop(now + sustain * 0.65);
+  return master;
+}
+
+// ── ETHEREAL: pads, bell-like, otherworldly ──
+function voiceEthereal(c, now, freq, vel, sustain, t) {
+  const master = c.createGain(); master.gain.value = 1;
+  // Bell partials (inharmonic)
+  const partials = [1, 2.756, 5.404, 8.933, 13.354];
+  const pAmps   = [0.7, 0.3, 0.12, 0.06, 0.02];
+  const pDecay  = [1.0, 0.7, 0.5, 0.35, 0.2];
+  partials.forEach((h, i) => {
+    const osc = c.createOscillator(); osc.type = 'sine';
+    osc.frequency.value = freq * h;
+    const g = c.createGain();
+    g.gain.setValueAtTime(vel * pAmps[i], now + 0.002 * i);
+    g.gain.exponentialRampToValueAtTime(0.001, now + sustain * pDecay[i]);
+    osc.connect(g); g.connect(master);
+    osc.start(now); osc.stop(now + sustain + 0.1);
+  });
+  // Soft chorus effect: tiny detune duplicate
+  const osc2 = c.createOscillator(); osc2.type = 'triangle';
+  osc2.frequency.value = freq;
+  osc2.detune.value = 7;
+  const g2 = c.createGain();
+  g2.gain.setValueAtTime(vel * 0.18, now + 0.01);
+  g2.gain.exponentialRampToValueAtTime(0.001, now + sustain * 0.8);
+  osc2.connect(g2); g2.connect(master);
+  osc2.start(now); osc2.stop(now + sustain + 0.1);
+  return master;
+}
+
+// ── GLISSANDOS ──
+function glissando(type) {
+  getCtx();
+  const btn = document.querySelector(`.chord-btn[data-chord="${type}"]`);
+  if (btn) { btn.classList.add('flash'); setTimeout(() => btn.classList.remove('flash'), 400); }
+
+  switch (type) {
+    case 'ascend': {
+      for (let i = 0; i < NUM_STRINGS; i++) {
+        setTimeout(() => pluckString(i, 0.5 + Math.random()*0.35), i * 55);
+      }
+      break;
+    }
+    case 'descend': {
+      for (let i = NUM_STRINGS - 1; i >= 0; i--) {
+        setTimeout(() => pluckString(i, 0.5 + Math.random()*0.35), (NUM_STRINGS - 1 - i) * 55);
+      }
+      break;
+    }
+    case 'arpeggio': {
+      // 1-3-5-8 arpeggio pattern repeated
+      const pattern = [0, 2, 4, 7, 9, 11, 12, 11, 9, 7, 4, 2];
+      pattern.forEach((s, i) => {
+        setTimeout(() => pluckString(Math.min(s, NUM_STRINGS-1), 0.55 + Math.random()*0.3), i * 90);
+      });
+      break;
+    }
+    case 'cascade': {
+      // Both directions overlap, like two hands
+      for (let i = 0; i < NUM_STRINGS; i++) {
+        setTimeout(() => pluckString(i, 0.45 + Math.random()*0.3), i * 40);
+        setTimeout(() => pluckString(NUM_STRINGS-1-i, 0.35 + Math.random()*0.25), i * 40 + 20);
+      }
+      break;
+    }
+    case 'olympus': {
+      // Stately, slow ascent with double plucks on key strings
+      const sacred = [0, 2, 4, 6, 8, 10, 12, 13];
+      sacred.forEach((s, i) => {
+        setTimeout(() => {
+          pluckString(s, 0.65 + Math.random()*0.3);
+          if (i % 3 === 0 && s + 1 < NUM_STRINGS) {
+            setTimeout(() => pluckString(s+1, 0.35), 60);
+          }
+        }, i * 130);
+      });
+      break;
+    }
+  }
+}
+
+// ── DISPLAY ──
+function updateDisplay(stringIdx, midi, freq) {
+  document.getElementById('note-name').textContent = midiToName(midi) + Math.floor(midi/12 - 1);
+  document.getElementById('note-freq').textContent = Math.round(freq) + ' Hz';
+  document.getElementById('muse-name').textContent = MUSE_NAMES[stringIdx] || 'Apollo';
+  document.getElementById('hs-string').textContent = stringIdx + 1;
+  document.getElementById('hs-note').textContent = midiToName(midi);
+  document.getElementById('hs-oct').textContent = Math.floor(midi/12 - 1);
+  ['hs-string','hs-note','hs-oct'].forEach(id => {
+    const el = document.getElementById(id); el.classList.add('lit');
+    clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('lit'), 400);
+  });
+  const dot = document.getElementById('power-dot');
+  dot.classList.add('on'); clearTimeout(dot._t);
+  dot._t = setTimeout(() => dot.classList.remove('on'), 500);
+}
+
+// ── KEYBOARD ──
+const KEY_STRINGS = { a:0, s:1, d:2, f:3, g:4, h:5, j:6, k:7, l:8, ';':9 };
+document.addEventListener('keydown', e => {
+  if (e.repeat || e.target.tagName === 'INPUT') return;
+  const key = e.key.toLowerCase();
+  if (KEY_STRINGS[key] !== undefined) {
+    getCtx(); pluckString(KEY_STRINGS[key], 0.65 + Math.random()*0.35);
+  }
+  if (key === 'z') { P.octave = Math.max(2, P.octave - 1); document.getElementById('hs-oct').textContent = P.octave; }
+  if (key === 'x') { P.octave = Math.min(6, P.octave + 1); document.getElementById('hs-oct').textContent = P.octave; }
+  const glissMap = {'1':'ascend','2':'descend','3':'arpeggio','4':'cascade','5':'olympus'};
+  if (glissMap[key]) glissando(glissMap[key]);
+});
+
+// ── BUTTON EVENTS ──
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); P.voice = btn.dataset.voice;
+  });
+});
+document.querySelectorAll('.scale-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); P.tuning = btn.dataset.tuning;
+  });
+});
+document.querySelectorAll('.chord-btn').forEach(btn => {
+  btn.addEventListener('click', () => glissando(btn.dataset.chord));
+});
+
+// ── CANVAS KNOBS ──
+function setupKnobs() {
+  document.querySelectorAll('canvas.knob').forEach(canvas => {
+    const id = canvas.id;
+    const min = parseFloat(canvas.dataset.min);
+    const max = parseFloat(canvas.dataset.max);
+    let val = parseFloat(canvas.dataset.val);
+    const color = canvas.dataset.color || '#f0c040';
+    const valEl = document.getElementById('v-' + id.replace('k-',''));
+
+    function draw() {
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height, cx = w/2, cy = h/2, r = w*0.36;
+      ctx.clearRect(0,0,w,h);
+      const sA = Math.PI*0.75, eA = Math.PI*2.25;
+      const t = (val-min)/(max-min);
+      const cA = sA + t*(eA-sA);
+
+      // Track bg
+      ctx.beginPath(); ctx.arc(cx,cy,r,sA,eA);
+      ctx.strokeStyle = 'rgba(240,192,64,.12)'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.stroke();
+      // Fill
+      ctx.beginPath(); ctx.arc(cx,cy,r,sA,cA);
+      ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.stroke();
+      // Indicator dot
+      const dx = cx + r*Math.cos(cA), dy = cy + r*Math.sin(cA);
+      ctx.beginPath(); ctx.arc(dx,dy,2.5,0,Math.PI*2);
+      ctx.fillStyle = color; ctx.fill();
+      // Center
+      ctx.beginPath(); ctx.arc(cx,cy,3,0,Math.PI*2);
+      ctx.fillStyle = 'rgba(6,5,14,.9)'; ctx.fill();
+      ctx.beginPath(); ctx.arc(cx,cy,1.5,0,Math.PI*2);
+      ctx.fillStyle = color; ctx.fill();
+    }
+
+    let dragY = null, dragVal = null;
+    canvas.addEventListener('mousedown', e => { dragY = e.clientY; dragVal = val; e.preventDefault(); });
+    document.addEventListener('mousemove', e => {
+      if (dragY === null) return;
+      val = Math.max(min, Math.min(max, dragVal + (dragY - e.clientY)*(max-min)/140));
+      draw(); onKnob(id, val, valEl);
+    });
+    document.addEventListener('mouseup', () => { dragY = null; });
+    draw(); onKnob(id, val, valEl);
+  });
+}
+
+function onKnob(id, val, el) {
+  const map = {
+    'k-reverb':  v => { P.reverb  = v; el.textContent = v.toFixed(2); },
+    'k-sustain': v => { P.sustain = v; el.textContent = v.toFixed(2); },
+    'k-tone':    v => { P.tone    = v; el.textContent = v.toFixed(2); },
+    'k-shimmer': v => { P.shimmer = v; el.textContent = v.toFixed(2); },
+  };
+  if (map[id]) map[id](val);
+}
+
+// ── WAVEFORM (gold) ──
+const waveCanvas = document.getElementById('wave-canvas');
+const wCtx = waveCanvas.getContext('2d');
+function resizeWave() { waveCanvas.width = waveCanvas.offsetWidth; waveCanvas.height = waveCanvas.offsetHeight; }
+function drawWave() {
+  requestAnimationFrame(drawWave);
+  const W = waveCanvas.width, H = waveCanvas.height;
+  wCtx.clearRect(0,0,W,H);
+  if (!analyser) return;
+  const buf = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteTimeDomainData(buf);
+  wCtx.strokeStyle = 'rgba(240,192,64,.55)';
+  wCtx.lineWidth = 1;
+  wCtx.shadowColor = '#f0c040'; wCtx.shadowBlur = 5;
+  wCtx.beginPath();
+  const step = W / buf.length;
+  for (let i = 0; i < buf.length; i++) {
+    const x = i * step;
+    const y = (buf[i]/128 - 1) * (H * 0.4) + H/2;
+    i === 0 ? wCtx.moveTo(x,y) : wCtx.lineTo(x,y);
+  }
+  wCtx.stroke(); wCtx.shadowBlur = 0;
+}
+
+// ── STARFIELD ──
+const starCanvas = document.getElementById('stars');
+const sCtx = starCanvas.getContext('2d');
+let stars = [];
+function initStars() {
+  starCanvas.width = window.innerWidth;
+  starCanvas.height = window.innerHeight;
+  stars = Array.from({length: 180}, () => ({
+    x: Math.random() * starCanvas.width,
+    y: Math.random() * starCanvas.height,
+    r: Math.random() * 1.1 + 0.2,
+    o: Math.random() * 0.5 + 0.1,
+    twinkle: Math.random() * Math.PI * 2,
+    speed: Math.random() * 0.02 + 0.005,
+    // small fraction are golden
+    gold: Math.random() > 0.82,
+  }));
+}
+function drawStars() {
+  requestAnimationFrame(drawStars);
+  sCtx.clearRect(0,0,starCanvas.width,starCanvas.height);
+  stars.forEach(s => {
+    s.twinkle += s.speed;
+    const brightness = s.o * (0.7 + 0.3 * Math.sin(s.twinkle));
+    sCtx.beginPath(); sCtx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+    sCtx.fillStyle = s.gold
+      ? `rgba(240,192,64,${brightness})`
+      : `rgba(220,215,255,${brightness * 0.6})`;
+    sCtx.fill();
+  });
+}
+
+// ── CURSOR ──
+const cursor = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top  = e.clientY + 'px';
+});
+
+// ── RESIZE ──
+window.addEventListener('resize', () => { resizeWave(); initStars(); buildStringsSVG(); });
+
+// ── INIT ──
+setupKnobs();
+resizeWave();
+initStars();
+drawStars();
+drawWave();
+buildStringsSVG();
+</script>
+</body>
+</html>
